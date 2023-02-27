@@ -2,7 +2,7 @@ import React from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-import UploadFiles from "./components/upload-files.component";
+import UploadFiles from "./components/UploadFileComponent";
 
 function App() {
   return (

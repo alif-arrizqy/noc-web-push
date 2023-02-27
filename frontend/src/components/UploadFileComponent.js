@@ -1,5 +1,10 @@
 import React, { Component } from "react";
-import UploadService from "../services/upload-files.service";
+import { Spin } from 'antd';
+import UploadService from "../services/UploadFiles";
+import FecthNoJsService from "../services/FetchNoJS";
+import PushFilesService from "../services/PushFiles";
+import Select from 'react-select';
+import Modals from "./ModalsComponent";
 
 export default class UploadFiles extends Component {
   constructor(props) {
@@ -9,6 +14,16 @@ export default class UploadFiles extends Component {
     this.handleSelect = this.handleSelect.bind(this);
 
     this.state = {
+      isClearable: true,
+      setIsClearable: true,
+      isSearchable: true,
+      setIsSearchable: true,
+      isDisabled: false,
+      setIsDisabled: false,
+      isLoading: false,
+      setIsLoading: false,
+      isRtl: false,
+      setIsRtl: false,
       nojs: '',
       selectedFiles: undefined,
       currentFile: undefined,
@@ -25,6 +40,7 @@ export default class UploadFiles extends Component {
         fileInfos: response.data,
       });
     });
+    this.fetch();
   }
 
   selectFile(event) {
@@ -78,11 +94,44 @@ export default class UploadFiles extends Component {
       nojs: this.state.nojs,
     }
     console.log(obj);
+    this.setState({
+      pushData: obj,
+      showModals: true,
+    })
+  }
+
+  handleOk = () => {
+    this.setState({
+      showModals: false,
+    })
+    console.log(this.state.pushData);
+    PushFilesService.push(this.state.pushData)
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((e) => {
+        console.log(e);
+      })
   }
 
   handleSelect(event) {
-    console.log('object');
-    this.setState({ nojs: event.target.value });
+    this.setState({ nojs: event.value });
+  }
+
+  fetch() {
+    FecthNoJsService.fetchNoJs()
+      .then((response) => {
+        let resp = response.data.data
+        resp = resp.map((item) => {
+          return {value:item.nojs, label: `${item.nojs} - ${item.site}`}
+        })
+        this.setState({
+          option: resp,
+        });
+      })
+      .catch((e) => {
+        console.log(e);
+      });
   }
 
   render() {
@@ -95,6 +144,13 @@ export default class UploadFiles extends Component {
     } = this.state;
     
     return (
+      <>
+      <Modals
+        show={this.state.showModals}
+        onClose={() => this.setState({ showModals: false })}
+        onOk={this.handleOk}
+      />
+        
       <div>
         {currentFile && (
           <div className="progress">
@@ -127,14 +183,11 @@ export default class UploadFiles extends Component {
           {message}
         </div>
         
-        <div className="card">
-          <div className="card-header">NOJS - Site</div>
-          <select onChange={(e) => this.handleSelect(e)}>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-          </select>
-        </div>
+        <Select 
+          options={this.state?.option}
+          onChange={this.handleSelect}
+          >
+        </Select>
 
         <div className="card">
           <div className="card-header">List of Files</div>
@@ -143,13 +196,15 @@ export default class UploadFiles extends Component {
               fileInfos.map((file, index) => (
                 <li className="list-group-item" key={index}>
                   <a href={file.url}>{file.name}</a>
-                  <button className="btn btn-primary" disabled={this.state.nojs === ''} onClick={()=>this.push(file)}>Push</button>
+                  <button className="btn btn-primary" disabled={this.state.nojs === ''} onClick={()=>this.push({...file, index})}>Push</button>
                   <button className="btn btn-danger">Delete</button>
+                  <Spin/>
                 </li>
               ))}
           </ul>
         </div>
       </div>
+      </>
     );
   }
 }
