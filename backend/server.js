@@ -8,14 +8,15 @@ dotenv.config();
 global.__basedir = __dirname;
 
 var corsOptions = {
-  origin: "http://localhost:8081"
+  origin: "http://localhost:3000"
 };
 
 app.use(cors(corsOptions));
 
 const initRoutes = require("./src/routes");
 
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 initRoutes(app);
 
 const port = 8080
