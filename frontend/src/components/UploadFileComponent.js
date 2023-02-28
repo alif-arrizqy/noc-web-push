@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Spin, message } from 'antd';
+import { Spin, message } from 'antd';
 import UploadService from "../services/UploadFiles";
 import FecthNoJsService from "../services/FetchNoJS";
 import PushFilesService from "../services/PushFiles";
@@ -14,8 +14,8 @@ export default class UploadFiles extends Component {
     this.handleSelect = this.handleSelect.bind(this);
 
     this.state = {
+      showMessage: false,
       isLoading: false,
-      setIsLoading: false,
       nojs: '',
       selectedFiles: undefined,
       currentFile: undefined,
@@ -103,25 +103,21 @@ export default class UploadFiles extends Component {
       .then((response) => {
         const codeStatusResponse = response.status
         codeStatusResponse === 200 ? this.setState({ isLoading: false }) : this.setState({ isLoading: true })
-        this.handleMessage(response.data)
+        // alert success
+        message.open({
+          type: 'success',
+          content: `${response.data.data}, Execution time ${response.data.duration}`,
+          duration: 5,
+        });
       })
       .catch((e) => {
-        console.log(e);
+        // alert error
+        message.open({
+          type: 'error',
+          content: `${e.response.data.message}`,
+          duration: 5,
+        });
       })
-  }
-
-  handleMessage = (req) => {
-    const [messageApi, contextHolder] = message.useMessage();
-    const responseMessage = req.data
-    const responseDuration = req.duration
-    const success = () => {
-      messageApi.open({
-        type: 'success',
-        content: `${responseMessage}, Execution time ${responseDuration}`,
-        duration: 10,
-      });
-    }
-    return success
   }
 
   handleSelect(event) {
