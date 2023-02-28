@@ -112,13 +112,27 @@ const pushData = async (req, res) => {
     };
 
     // axios post
+    const mills = new Date().getTime()
     await axios
       .post(url, body, config, config, { timeout: 100000 })
       .then((response) => {
-        return res.status(200).json(response.data);
+        const finishTime = new Date().getTime() - mills
+        const timeResponse = new Date(finishTime);
+        const duration = `${timeResponse.getMinutes()} m ${timeResponse.getSeconds()} s`;
+        
+        const resp = response.data
+        // update object response
+        resp.duration = duration
+        return res.status(200).json(resp);
       })
       .catch((error) => {
-        return res.status(500).json({ status: false, message: error });
+        const finishTime = new Date().getTime() - mills
+        const timeResponse = new Date(finishTime);
+        const duration = `${timeResponse.getMinutes()} m ${timeResponse.getSeconds()} s`;
+        // console.log(duration);
+        const resp = error
+        resp.duration = duration
+        return res.status(500).json({ status: false, message: resp });
       });
   });
 };
