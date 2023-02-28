@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Spin } from 'antd';
+import { Button, Spin, message } from 'antd';
 import UploadService from "../services/UploadFiles";
 import FecthNoJsService from "../services/FetchNoJS";
 import PushFilesService from "../services/PushFiles";
@@ -14,16 +14,8 @@ export default class UploadFiles extends Component {
     this.handleSelect = this.handleSelect.bind(this);
 
     this.state = {
-      isClearable: true,
-      setIsClearable: true,
-      isSearchable: true,
-      setIsSearchable: true,
-      isDisabled: false,
-      setIsDisabled: false,
       isLoading: false,
       setIsLoading: false,
-      isRtl: false,
-      setIsRtl: false,
       nojs: '',
       selectedFiles: undefined,
       currentFile: undefined,
@@ -97,21 +89,39 @@ export default class UploadFiles extends Component {
     this.setState({
       pushData: obj,
       showModals: true,
+      keyIndex: req.index
     })
   }
 
   handleOk = () => {
     this.setState({
       showModals: false,
+      isLoading: true
     })
     console.log(this.state.pushData);
     PushFilesService.push(this.state.pushData)
       .then((response) => {
-        console.log(response);
+        const codeStatusResponse = response.status
+        codeStatusResponse === 200 ? this.setState({ isLoading: false }) : this.setState({ isLoading: true })
+        this.handleMessage(response.data)
       })
       .catch((e) => {
         console.log(e);
       })
+  }
+
+  handleMessage = (req) => {
+    const [messageApi, contextHolder] = message.useMessage();
+    const responseMessage = req.data
+    const responseDuration = req.duration
+    const success = () => {
+      messageApi.open({
+        type: 'success',
+        content: `${responseMessage}, Execution time ${responseDuration}`,
+        duration: 10,
+      });
+    }
+    return success
   }
 
   handleSelect(event) {
@@ -198,7 +208,7 @@ export default class UploadFiles extends Component {
                   <a href={file.url}>{file.name}</a>
                   <button className="btn btn-primary" disabled={this.state.nojs === ''} onClick={()=>this.push({...file, index})}>Push</button>
                   <button className="btn btn-danger">Delete</button>
-                  <Spin/>
+                  {this.state.keyIndex === undefined ? null : this.state.isLoading === true ? <Spin /> : null}
                 </li>
               ))}
           </ul>
