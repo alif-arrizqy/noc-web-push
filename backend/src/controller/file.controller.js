@@ -7,7 +7,7 @@ const {nojsUserModel} = require("../../models");
 
 // const baseUrl = "http://localhost:8080/files/";
 const baseUrl = env.BASE_URL;
-const APT2_URL = env.APT2_URL;
+const APT_URL = env.APT_URL;
 
 const getNoJS = async (req, res) => {
   try {
@@ -55,7 +55,7 @@ const upload = async (req, res) => {
 
 const pushData = async (req, res) => {
   const directoryPath = __basedir + "/resources/static/assets/uploads/";
-  const url = APT2_URL;
+  const url = APT_URL;
   const filename = req.body.filename;
   const nojs = req.body.nojs;
 

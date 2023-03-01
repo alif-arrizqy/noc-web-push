@@ -3,8 +3,9 @@ import { Spin, message } from 'antd';
 import UploadService from "../services/UploadFiles";
 import FecthNoJsService from "../services/FetchNoJS";
 import PushFilesService from "../services/PushFiles";
+import DeleteFilesService from "../services/DeleteFiles";
 import Select from 'react-select';
-import Modals from "./ModalsComponent";
+import {Modals, DeleteModals} from "./ModalsComponent";
 
 export default class UploadFiles extends Component {
   constructor(props) {
@@ -88,14 +89,16 @@ export default class UploadFiles extends Component {
     console.log(obj);
     this.setState({
       pushData: obj,
-      showModals: true,
-      keyIndex: req.index
+      showPushModals: true,
+      keyIndex: req.index,
+      noJS: this.state.nojs,
+      title: "Push Data ?"
     })
   }
 
   handleOk = () => {
     this.setState({
-      showModals: false,
+      showPushModals: false,
       isLoading: true
     })
     console.log(this.state.pushData);
@@ -106,16 +109,17 @@ export default class UploadFiles extends Component {
         // alert success
         message.open({
           type: 'success',
-          content: `${response.data.data}, Execution time ${response.data.duration}`,
-          duration: 5,
+          content: `file ${this.state.pushData.filename} ${response.data.data}, Execution time ${response.data.duration}`,
+          duration: 15,
         });
+        console.log(`file ${this.state.pushData.filename} ${response.data.data}, Execution time ${response.data.duration}`);
       })
       .catch((e) => {
         // alert error
         message.open({
           type: 'error',
           content: `${e.response.data.message}`,
-          duration: 5,
+          duration: 15,
         });
       })
   }
@@ -140,6 +144,50 @@ export default class UploadFiles extends Component {
       });
   }
 
+  delete(req) {
+    const filename = req.name
+
+    this.setState({
+      filename: filename,
+      showDeleteModals: true,
+      keyIndex: req.index,
+      title: "Delete Data ?"
+    })
+  }
+
+  handleDelete = () => {
+    this.setState({
+      showDeleteModals: false,
+      isLoading: true
+    })
+    console.log(this.state.filename);
+    DeleteFilesService.delete(this.state.filename)
+      .then((response) => {
+        const codeStatusResponse = response.status
+        codeStatusResponse === 200 ? this.setState({ isLoading: false }) : this.setState({ isLoading: true })
+        // alert success
+        message.open({
+          type: 'success',
+          content: `${this.state.filename} ${response.data.message}`,
+          duration: 10,
+        });
+        return UploadService.getFiles();
+      })
+      .then((files) => {
+        this.setState({
+          fileInfos: files.data,
+        });
+      })
+      .catch((e) => {
+        // alert error
+        message.open({
+          type: 'error',
+          content: `${e.response.data.message}`,
+          duration: 10,
+        });
+      })
+  }
+
   render() {
     const {
       selectedFiles,
@@ -152,9 +200,16 @@ export default class UploadFiles extends Component {
     return (
       <>
       <Modals
-        show={this.state.showModals}
-        onClose={() => this.setState({ showModals: false })}
+        titleModal={this.state.title}
+        show={this.state.showPushModals}
+        onClose={() => this.setState({ showPushModals: false })}
         onOk={this.handleOk}
+      />
+      <DeleteModals
+        titleModal={this.state.title}
+        show={this.state.showDeleteModals}
+        onClose={() => this.setState({ showDeleteModals: false })}
+        onOk={this.handleDelete}
       />
         
       <div>
@@ -181,8 +236,7 @@ export default class UploadFiles extends Component {
           className="btn btn-success"
           disabled={!selectedFiles}
           onClick={this.upload}
-        >
-          Upload
+        > Upload
         </button>
 
         <div className="alert alert-light" role="alert">
@@ -195,16 +249,17 @@ export default class UploadFiles extends Component {
           >
         </Select>
 
-        <div className="card">
+        <div className="card mt-4">
           <div className="card-header">List of Files</div>
           <ul className="list-group list-group-flush">
             {fileInfos &&
               fileInfos.map((file, index) => (
                 <li className="list-group-item" key={index}>
-                  <a href={file.url}>{file.name}</a>
+                  {/* <a href={file.url}>{file.name}</a> */}
+                  {file.name}
                   <button className="btn btn-primary" disabled={this.state.nojs === ''} onClick={()=>this.push({...file, index})}>Push</button>
-                  <button className="btn btn-danger">Delete</button>
-                  {this.state.keyIndex === undefined ? null : this.state.isLoading === true ? <Spin /> : null}
+                  <button className="btn btn-danger" onClick={()=>this.delete({...file, index})}>Delete</button>
+                  {this.state.keyIndex === index ? this.state.isLoading === true ? <Spin /> : null : null}
                 </li>
               ))}
           </ul>
