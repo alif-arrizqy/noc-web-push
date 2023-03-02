@@ -118,7 +118,7 @@ export default class UploadFiles extends Component {
         // alert error
         message.open({
           type: 'error',
-          content: `${e.response.data.message}`,
+          content: `${e.response.data.message.message}`,
           duration: 15,
         });
       })

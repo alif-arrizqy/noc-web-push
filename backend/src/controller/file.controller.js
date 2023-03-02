@@ -3,26 +3,32 @@ const fs = require("fs");
 const axios = require("axios");
 const dotenv = require("dotenv");
 const env = dotenv.config().parsed;
-const {nojsUserModel} = require("../../models");
 
-// const baseUrl = "http://localhost:8080/files/";
-const baseUrl = env.BASE_URL;
-const APT_URL = env.APT_URL;
+const baseUrl = process.env.BASE_URL;
+const APT_URL = process.env.APT_URL;
 
 const getNoJS = async (req, res) => {
   try {
-    const ResultNoJS = await nojsUserModel.findAll();
-    return res.status(200).json({
-      status: "success",
-      msg: "Data Berhasil Di GET",
-      jumlah_data: ResultNoJS.length,
-      data: ResultNoJS,
-    });
-  } catch (err) {
-    console.log(err);
+    await axios.get(`${APT_URL}/api/nojs`)
+      .then((response) => {
+        res.status(200).json({
+          status: "success",
+          msg: "Data Berhasil Di GET",
+          jumlah_data: response.data.data.length,
+          data: response.data.data,
+        })
+      })
+      .catch((error) => {
+        return res.status(500).json({
+          status: "error",
+          msg: `Data Gagal Di GET, ${error}`
+        });
+      });
+  }
+  catch (err) {
     return res.status(500).json({
       status: "error",
-      msg: "Data Gagal Di GET",
+      msg: `Data Gagal Di GET, ${err}`
     });
   }
 };
@@ -55,7 +61,6 @@ const upload = async (req, res) => {
 
 const pushData = async (req, res) => {
   const directoryPath = __basedir + "/resources/static/assets/uploads/";
-  const url = APT_URL;
   const filename = req.body.filename;
   const nojs = req.body.nojs;
 
@@ -114,7 +119,7 @@ const pushData = async (req, res) => {
     // axios post
     const mills = new Date().getTime()
     await axios
-      .post(url, body, config, config, { timeout: 100000 })
+      .post(`${APT_URL}/api/logger`, body, config, config, { timeout: 100000 })
       .then((response) => {
         const finishTime = new Date().getTime() - mills
         const timeResponse = new Date(finishTime);
