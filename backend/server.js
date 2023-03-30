@@ -6,7 +6,7 @@ const app = express();
 global.__basedir = __dirname;
 
 var corsOptions = {
-  origin: ["http://localhost:3003", "http://192.168.2.156:3003"]
+  origin: '*'
 };
 
 app.use(cors(corsOptions));
