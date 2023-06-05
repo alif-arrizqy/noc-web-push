@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Spin, message } from 'antd';
+import { Spin, notification } from 'antd';
 import UploadService from "../services/UploadFiles";
 import FecthNoJsService from "../services/FetchNoJS";
 import PushFilesService from "../services/PushFiles";
@@ -107,20 +107,29 @@ export default class UploadFiles extends Component {
         const codeStatusResponse = response.status
         codeStatusResponse === 200 ? this.setState({ isLoading: false }) : this.setState({ isLoading: true })
         // alert success
-        message.open({
-          type: 'success',
-          content: `file ${this.state.pushData.filename} ${response.data.data}, Execution time ${response.data.duration}`,
-          duration: 15,
-        });
+        // message.open({
+        //   type: 'success',
+        //   content: `file ${this.state.pushData.filename} ${response.data.data}, Execution time ${response.data.duration}`,
+        //   duration: 15,
+        // });
+
+        notification.success({
+          message: 'Push Data Success',
+          description: `file ${this.state.pushData.filename} ${response.data.data}, Execution time ${response.data.duration}`,
+        })
         console.log(`file ${this.state.pushData.filename} ${response.data.data}, Execution time ${response.data.duration}`);
       })
       .catch((e) => {
         // alert error
-        message.open({
-          type: 'error',
-          content: `${e.response.data.message.message}`,
-          duration: 15,
-        });
+        // message.open({
+        //   type: 'error',
+        //   content: `${e.response.data.message.message}`,
+        //   duration: 15,
+        // });
+        notification.error({
+          message: 'Push Data Error',
+          description: `${e.response.data.message.message}`,
+        })
       })
   }
 
@@ -166,11 +175,16 @@ export default class UploadFiles extends Component {
         const codeStatusResponse = response.status
         codeStatusResponse === 200 ? this.setState({ isLoading: false }) : this.setState({ isLoading: true })
         // alert success
-        message.open({
-          type: 'success',
-          content: `${this.state.filename} ${response.data.message}`,
-          duration: 10,
-        });
+        // message.open({
+        //   type: 'success',
+        //   content: `${this.state.filename} ${response.data.message}`,
+        //   duration: 10,
+        // });
+        notification.success({
+          message: 'Delete Success',
+          description: `${this.state.filename} ${response.data.message}`,
+          duration: 0,
+        })
         return UploadService.getFiles();
       })
       .then((files) => {
@@ -180,11 +194,15 @@ export default class UploadFiles extends Component {
       })
       .catch((e) => {
         // alert error
-        message.open({
-          type: 'error',
-          content: `${e.response.data.message}`,
-          duration: 10,
-        });
+        // message.open({
+        //   type: 'error',
+        //   content: `${e.response.data.message}`,
+        //   duration: 10,
+        // });
+        notification.error({
+          message: 'Delete Error',
+          description: `${e.response.data.message}`,
+        })
       })
   }
 
