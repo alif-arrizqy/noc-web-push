@@ -13,6 +13,7 @@ export default class UploadFiles extends Component {
     this.selectFile = this.selectFile.bind(this);
     this.upload = this.upload.bind(this);
     this.handleSelect = this.handleSelect.bind(this);
+    this.uploadFiles = this.uploadFiles.bind(this);
 
     this.state = {
       showMessage: false,
@@ -21,7 +22,9 @@ export default class UploadFiles extends Component {
       selectedFiles: undefined,
       currentFile: undefined,
       progress: 0,
-      message: "",
+      // message: "",
+      progressInfos: [],
+      message: [],
 
       fileInfos: [],
     };
@@ -38,27 +41,63 @@ export default class UploadFiles extends Component {
 
   selectFile(event) {
     this.setState({
+      progressInfos: [],
       selectedFiles: event.target.files,
     });
   }
 
-  upload() {
-    let currentFile = this.state.selectedFiles[0];
+  upload(idx, file) {
+    // let currentFile = this.state.selectedFiles[0];
 
-    this.setState({
-      progress: 0,
-      currentFile: currentFile,
-    });
+    // this.setState({
+    //   progress: 0,
+    //   currentFile: currentFile,
+    // });
 
-    UploadService.upload(currentFile, (event) => {
+    // UploadService.upload(currentFile, (event) => {
+    //   this.setState({
+    //     progress: Math.round((100 * event.loaded) / event.total),
+    //   });
+    // })
+    //   .then((response) => {
+    //     this.setState({
+    //       message: response.data.message,
+    //     });
+    //     return UploadService.getFiles();
+    //   })
+    //   .then((files) => {
+    //     this.setState({
+    //       fileInfos: files.data,
+    //     });
+    //   })
+    //   .catch(() => {
+    //     this.setState({
+    //       progress: 0,
+    //       message: "Could not upload the file!",
+    //       currentFile: undefined,
+    //     });
+    //   });
+
+    // this.setState({
+    //   selectedFiles: undefined,
+    // });
+
+    let _progressInfos = [...this.state.progressInfos];
+
+    UploadService.upload(file, (event) => {
+      _progressInfos[idx].percentage = Math.round((100 * event.loaded) / event.total);
       this.setState({
-        progress: Math.round((100 * event.loaded) / event.total),
+        _progressInfos,
       });
     })
       .then((response) => {
-        this.setState({
-          message: response.data.message,
+        this.setState((prev) => {
+          let nextMessage = [...prev.message, "Uploaded the file successfully: " + file.name];
+          return {
+            message: nextMessage
+          };
         });
+
         return UploadService.getFiles();
       })
       .then((files) => {
@@ -67,16 +106,37 @@ export default class UploadFiles extends Component {
         });
       })
       .catch(() => {
-        this.setState({
-          progress: 0,
-          message: "Could not upload the file!",
-          currentFile: undefined,
+        _progressInfos[idx].percentage = 0;
+        this.setState((prev) => {
+          let nextMessage = [...prev.message, "Could not upload the file: " + file.name];
+          return {
+            progressInfos: _progressInfos,
+            message: nextMessage
+          };
         });
       });
+  }
 
-    this.setState({
-      selectedFiles: undefined,
-    });
+  uploadFiles() {
+    const selectedFiles = this.state.selectedFiles;
+
+    let _progressInfos = [];
+
+    for (let i = 0; i < selectedFiles.length; i++) {
+      _progressInfos.push({ percentage: 0, fileName: selectedFiles[i].name });
+    }
+
+    this.setState(
+      {
+        progressInfos: _progressInfos,
+        message: [],
+      },
+      () => {
+        for (let i = 0; i < selectedFiles.length; i++) {
+          this.upload(i, selectedFiles[i]);
+        }
+      }
+    );
   }
 
   push(req) {
@@ -207,13 +267,7 @@ export default class UploadFiles extends Component {
   }
 
   render() {
-    const {
-      selectedFiles,
-      currentFile,
-      progress,
-      message,
-      fileInfos,
-    } = this.state;
+    const { selectedFiles, progressInfos, message, fileInfos } = this.state;
     
     return (
       <>
@@ -231,29 +285,33 @@ export default class UploadFiles extends Component {
       />
         
       <div>
-        {currentFile && (
-          <div className="progress">
-            <div
-              className="progress-bar progress-bar-info progress-bar-striped"
-              role="progressbar"
-              aria-valuenow={progress}
-              aria-valuemin="0"
-              aria-valuemax="100"
-              style={{ width: progress + "%" }}
-            >
-              {progress}%
+      {progressInfos &&
+          progressInfos.map((progressInfo, index) => (
+            <div className="mb-2" key={index}>
+              <span>{progressInfo.fileName}</span>
+              <div className="progress">
+                <div
+                  className="progress-bar progress-bar-info"
+                  role="progressbar"
+                  aria-valuenow={progressInfo.percentage}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  style={{ width: progressInfo.percentage + "%" }}
+                >
+                  {progressInfo.percentage}%
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          ))}
 
         <label className="btn btn-default">
-          <input type="file" onChange={this.selectFile} />
+          <input type="file" multiple onChange={this.selectFile} />
         </label>
 
         <button
           className="btn btn-success"
           disabled={!selectedFiles}
-          onClick={this.upload}
+          onClick={this.uploadFiles}
         > Upload
         </button>
 
