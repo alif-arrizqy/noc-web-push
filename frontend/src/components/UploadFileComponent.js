@@ -176,6 +176,7 @@ export default class UploadFiles extends Component {
         notification.success({
           message: 'Push Data Success',
           description: `file ${this.state.pushData.filename} ${response.data.data}, Execution time ${response.data.duration}`,
+          duration: 0,
         })
         console.log(`file ${this.state.pushData.filename} ${response.data.data}, Execution time ${response.data.duration}`);
       })
@@ -189,6 +190,7 @@ export default class UploadFiles extends Component {
         notification.error({
           message: 'Push Data Error',
           description: `${e.response.data.message.message}`,
+          duration: 0,
         })
       })
   }
@@ -262,6 +264,7 @@ export default class UploadFiles extends Component {
         notification.error({
           message: 'Delete Error',
           description: `${e.response.data.message}`,
+          duration: 0,
         })
       })
   }
